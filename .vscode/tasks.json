@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build bootloader (release)",
+            "type": "shell",
+            "command": "cargo build --release -p bootloader"
+        },
+        {
+            "label": "Build app1 (release)",
+            "type": "shell",
+            "command": "cargo build --release -p app1"
+        },
+        {
+            "label": "Build app2 (release)",
+            "type": "shell",
+            "command": "cargo build --release -p app2"
+        },
+        {
+            "label": "Build all (release)",
+            "type": "shell",
+            "command": "cargo build --release"
+        },
+        {
+            "label": "Flash bootloader",
+            "type": "shell",
+            "command": "probe-rs download target/thumbv7em-none-eabihf/release/bootloader --chip STM32F411CEUx --base-address 0x08000000"
+        },
+        {
+            "label": "Flash app1",
+            "type": "shell",
+            "command": "probe-rs download target/thumbv7em-none-eabihf/release/app1 --chip STM32F411CEUx --base-address 0x08004000"
+        },
+        {
+            "label": "Flash app2",
+            "type": "shell",
+            "command": "probe-rs download target/thumbv7em-none-eabihf/release/app2 --chip STM32F411CEUx --base-address 0x08024000"
+        },
+        {
+            "label": "Flash all (bootloader + app1 + app2)",
+            "type": "shell",
+            "command": "probe-rs download target/thumbv7em-none-eabihf/release/bootloader --chip STM32F411CEUx --base-address 0x08000000 && probe-rs download target/thumbv7em-none-eabihf/release/app1 --chip STM32F411CEUx --base-address 0x08004000 && probe-rs download target/thumbv7em-none-eabihf/release/app2 --chip STM32F411CEUx --base-address 0x08024000"
+        }
+    ]
+}
+
+

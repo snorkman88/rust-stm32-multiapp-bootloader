@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "name": "Debug app1",
+            "cwd": "${workspaceFolder}",
+            "connectUnderReset": false,
+            "chip": "STM32F411CEUx",
+            "flashingConfig": {
+                "flashingEnabled": true,
+                "haltAfterReset": false,
+                "formatOptions": {
+                    "baseAddress": 134217728 // 0x08000000
+                }
+            },
+            "coreConfigs": [
+                {
+                    "coreIndex": 0,
+                    "programBinary": "${workspaceFolder}/target/thumbv7em-none-eabihf/release/app1",
+                    "svdFile": "/Users/milton/Desktop/Maestria_CEIoT/grid_monitor_rust/STM32F411.svd",
+                    "rttEnabled": true,
+                },
+            ],
+            "consoleLogLevel": "Info",
+        },
+        {
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "name": "Debug app2 (jump target)",
+            "cwd": "${workspaceFolder}",
+            "chip": "STM32F411CEU6",
+            "flashingConfig": {
+                "flashingEnabled": true,
+                "haltAfterReset": false,
+                "formatOptions": {
+                    "baseAddress": 134283264 // "0x08010000",
+                }
+            },
+            "coreConfigs": [
+                {
+                    "coreIndex": 0,
+                    "programBinary": "${workspaceFolder}/target/thumbv7em-none-eabihf/release/app2",
+                    "svdFile": "/Users/milton/Desktop/Maestria_CEIoT/grid_monitor_rust/STM32F411.svd",
+                    "rttEnabled": true,
+                },
+            ],
+            //"program": "${workspaceFolder}/app2/target/thumbv7em-none-eabihf/release/app2",
+            //"base-address": 134283264//"0x08010000"
+        }
+    ]
+}

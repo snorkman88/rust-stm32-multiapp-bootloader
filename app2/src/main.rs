@@ -77,7 +77,7 @@ mod app {
         let last_button_state = button.is_high();
         defmt::warn!("=== APP2 INIT COMPLETE ===");
         (
-            Shared { delayval: 50_u32 },
+            Shared { delayval: 30_u32 },
             Local {
                 button,
                 led,

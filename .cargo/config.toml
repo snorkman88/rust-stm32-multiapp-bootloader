@@ -1,0 +1,5 @@
+[target.thumbv7em-none-eabihf]
+runner = "probe-rs-cli run --chip STM32F411CEU6"
+
+[build]
+target = "thumbv7em-none-eabihf"

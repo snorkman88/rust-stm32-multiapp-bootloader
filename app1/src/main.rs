@@ -30,13 +30,13 @@ mod app {
 
     use stm32f4xx_hal::{
         gpio::{self, Edge, Input, Output, PushPull},
-        pac::TIM1,
+        pac::{TIM1, USART2},
         prelude::*,
         rcc::Config,
+        serial::{config::Config as SerialConfig, Serial},
         timer,
     };
-
-    use defmt_rtt as _;
+    use core::fmt::Write;
 
     use crate::jump_to_other;
 
@@ -54,6 +54,7 @@ mod app {
         button: gpio::PA0<Input>,
         led: gpio::PC13<Output<PushPull>>,
         delay: timer::DelayMs<TIM1>,
+        uart: Serial<USART2>,
     }
 
     #[init]
@@ -83,6 +84,18 @@ mod app {
         // 2) Configure Pin and Obtain Handle
         let mut button = gpioa.pa0.into_pull_up_input();
 
+        // Configure UART2 for logging (PA2=TX, PA3=RX)
+        let tx_pin = gpioa.pa2.into_alternate();
+        let rx_pin = gpioa.pa3.into_alternate();
+        let mut uart = Serial::new(
+            dp.USART2,
+            (tx_pin, rx_pin),
+            SerialConfig::default().baudrate(115200.bps()),
+            &mut rcc,
+        )
+        .unwrap();
+        writeln!(uart, "\r\n=== APP1 STARTING ===").ok();
+
         // Configure Button Pin for Interrupts
         // 1) Promote SYSCFG structure to HAL to be able to configure interrupts
         let mut syscfg = dp.SYSCFG.constrain(&mut rcc);
@@ -94,24 +107,19 @@ mod app {
         button.enable_interrupt(&mut dp.EXTI);
         // 5) CRITICAL: Explicitly unmask EXTI0 in NVIC after jump
         unsafe {
-            use core::ptr::read_volatile;
             use cortex_m::peripheral::NVIC;
             use stm32f4xx_hal::pac::Interrupt;
-
             NVIC::unmask(Interrupt::EXTI0);
-
-            const NVIC_ISER0: *const u32 = 0xE000_E100 as *const u32;
-            let nvic_iser = read_volatile(NVIC_ISER0);
-            defmt::warn!("NVIC_ISER0={:#010x} (bit0 should be 1)", nvic_iser);
         }
 
-        defmt::warn!("=== APP1 INITIALIZATION COMPLETE ===");
+        writeln!(uart, "APP1: Init complete - button interrupt enabled").ok();
+        writeln!(uart, "APP1: Press button to switch to APP2").ok();
 
         (
             // Initialization of shared resources
             Shared { delayval: 2000_u32 },
             // Initialization of task local resources
-            Local { button, led, delay },
+            Local { button, led, delay, uart },
         )
     }
 
@@ -140,9 +148,9 @@ mod app {
         }
     }
 
-    #[task(binds = EXTI0, local = [button], shared=[delayval])]
+    #[task(binds = EXTI0, local = [button, uart], shared=[delayval])]
     fn gpio_interrupt_handler(ctx: gpio_interrupt_handler::Context) {
-        defmt::warn!("!!! BUTTON INTERRUPT FIRED !!!");
+        writeln!(ctx.local.uart, "APP1: Button pressed! Switching to APP2...").ok();
         ctx.local.button.clear_interrupt_pending_bit();
 
         // Jump to the other application

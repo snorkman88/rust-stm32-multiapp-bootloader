@@ -1,4 +1,6 @@
-/* Minimal device.x for bootloader - no interrupts needed */
+/* Minimal device.x for bootloader - provides exception handlers and interrupt stubs */
+
+/* Exception handlers */
 PROVIDE(NMI = DefaultHandler);
 PROVIDE(HardFault = HardFault_);
 PROVIDE(MemManage = DefaultHandler);
@@ -7,3 +9,63 @@ PROVIDE(UsageFault = DefaultHandler);
 PROVIDE(SVCall = DefaultHandler);
 PROVIDE(PendSV = DefaultHandler);
 PROVIDE(SysTick = DefaultHandler);
+
+/* External interrupts - STM32F4 has 82 interrupt lines, but we don't use them in bootloader */
+/* We just need to define enough to satisfy cortex-m-rt */
+PROVIDE(WWDG = DefaultHandler);
+PROVIDE(PVD = DefaultHandler);
+PROVIDE(TAMP_STAMP = DefaultHandler);
+PROVIDE(RTC_WKUP = DefaultHandler);
+PROVIDE(FLASH = DefaultHandler);
+PROVIDE(RCC = DefaultHandler);
+PROVIDE(EXTI0 = DefaultHandler);
+PROVIDE(EXTI1 = DefaultHandler);
+PROVIDE(EXTI2 = DefaultHandler);
+PROVIDE(EXTI3 = DefaultHandler);
+PROVIDE(EXTI4 = DefaultHandler);
+PROVIDE(DMA1_STREAM0 = DefaultHandler);
+PROVIDE(DMA1_STREAM1 = DefaultHandler);
+PROVIDE(DMA1_STREAM2 = DefaultHandler);
+PROVIDE(DMA1_STREAM3 = DefaultHandler);
+PROVIDE(DMA1_STREAM4 = DefaultHandler);
+PROVIDE(DMA1_STREAM5 = DefaultHandler);
+PROVIDE(DMA1_STREAM6 = DefaultHandler);
+PROVIDE(ADC = DefaultHandler);
+PROVIDE(EXTI9_5 = DefaultHandler);
+PROVIDE(TIM1_BRK_TIM9 = DefaultHandler);
+PROVIDE(TIM1_UP_TIM10 = DefaultHandler);
+PROVIDE(TIM1_TRG_COM_TIM11 = DefaultHandler);
+PROVIDE(TIM1_CC = DefaultHandler);
+PROVIDE(TIM2 = DefaultHandler);
+PROVIDE(TIM3 = DefaultHandler);
+PROVIDE(TIM4 = DefaultHandler);
+PROVIDE(I2C1_EV = DefaultHandler);
+PROVIDE(I2C1_ER = DefaultHandler);
+PROVIDE(I2C2_EV = DefaultHandler);
+PROVIDE(I2C2_ER = DefaultHandler);
+PROVIDE(SPI1 = DefaultHandler);
+PROVIDE(SPI2 = DefaultHandler);
+PROVIDE(USART1 = DefaultHandler);
+PROVIDE(USART2 = DefaultHandler);
+PROVIDE(EXTI15_10 = DefaultHandler);
+PROVIDE(RTC_ALARM = DefaultHandler);
+PROVIDE(OTG_FS_WKUP = DefaultHandler);
+PROVIDE(DMA1_STREAM7 = DefaultHandler);
+PROVIDE(SDIO = DefaultHandler);
+PROVIDE(TIM5 = DefaultHandler);
+PROVIDE(SPI3 = DefaultHandler);
+PROVIDE(DMA2_STREAM0 = DefaultHandler);
+PROVIDE(DMA2_STREAM1 = DefaultHandler);
+PROVIDE(DMA2_STREAM2 = DefaultHandler);
+PROVIDE(DMA2_STREAM3 = DefaultHandler);
+PROVIDE(DMA2_STREAM4 = DefaultHandler);
+PROVIDE(OTG_FS = DefaultHandler);
+PROVIDE(DMA2_STREAM5 = DefaultHandler);
+PROVIDE(DMA2_STREAM6 = DefaultHandler);
+PROVIDE(DMA2_STREAM7 = DefaultHandler);
+PROVIDE(USART6 = DefaultHandler);
+PROVIDE(I2C3_EV = DefaultHandler);
+PROVIDE(I2C3_ER = DefaultHandler);
+PROVIDE(FPU = DefaultHandler);
+PROVIDE(SPI4 = DefaultHandler);
+PROVIDE(SPI5 = DefaultHandler);

@@ -86,6 +86,7 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "panic-halt 0.2.0",
+ "stm32f4",
 ]
 
 [[package]]

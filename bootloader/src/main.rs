@@ -4,6 +4,8 @@
 use core::ptr::{read_volatile, write_volatile};
 use cortex_m_rt::entry;
 use panic_halt as _;
+// Import stm32f4 to provide interrupt vector table
+use stm32f4 as _;
 
 // Magic value stored in noinit section (survives reset)
 #[link_section = ".noinit"]

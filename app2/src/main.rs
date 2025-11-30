@@ -28,14 +28,15 @@ pub unsafe fn jump_to_other(_addr: u32) -> ! {
 
 #[rtic::app(device = stm32f4xx_hal::pac, peripherals = true)]
 mod app {
-    use defmt_rtt as _;
     use stm32f4xx_hal::{
         gpio::{self, Input, Output, PushPull},
-        pac::TIM1,
+        pac::{TIM1, USART2},
         prelude::*,
         rcc::Config,
+        serial::{config::Config as SerialConfig, Serial},
         timer,
     };
+    use core::fmt::Write;
 
     use crate::jump_to_other;
 
@@ -52,6 +53,7 @@ mod app {
         led: gpio::PC13<Output<PushPull>>,
         delay: timer::DelayMs<TIM1>,
         last_button_state: bool,
+        uart: Serial<USART2>,
     }
 
     #[init]
@@ -65,7 +67,20 @@ mod app {
         let gpioa: gpio::gpioa::Parts = dp.GPIOA.split(&mut rcc);
         let button = gpioa.pa0.into_pull_up_input();
         let last_button_state = button.is_high();
-        defmt::warn!("=== APP2 INIT COMPLETE ===");
+
+        // Configure UART2 for logging (PA2=TX, PA3=RX)
+        let tx_pin = gpioa.pa2.into_alternate();
+        let rx_pin = gpioa.pa3.into_alternate();
+        let mut uart = Serial::new(
+            dp.USART2,
+            (tx_pin, rx_pin),
+            SerialConfig::default().baudrate(115200.bps()),
+            &mut rcc,
+        )
+        .unwrap();
+        writeln!(uart, "\r\n=== APP2 STARTING ===").ok();
+        writeln!(uart, "APP2: Init complete - fast blinker mode").ok();
+        writeln!(uart, "APP2: Press button to switch to APP1").ok();
         (
             Shared { delayval: 50_u32 },
             Local {
@@ -73,22 +88,25 @@ mod app {
                 led,
                 delay,
                 last_button_state,
+                uart,
             },
         )
     }
 
-    #[idle(local = [led, delay, button, last_button_state], shared = [delayval])]
+    #[idle(local = [led, delay, button, last_button_state, uart], shared = [delayval])]
     fn idle(mut ctx: idle::Context) -> ! {
         let led = ctx.local.led;
         let delay = ctx.local.delay;
         let button = ctx.local.button;
         let last_button_state = ctx.local.last_button_state;
+        let uart = ctx.local.uart;
 
         loop {
             let current_button_state = button.is_high();
 
             // Detect rising edge (button press) - JUMP TO APP1
             if current_button_state && !*last_button_state {
+                writeln!(uart, "APP2: Button pressed! Switching to APP1...").ok();
                 // Jump to app1
                 unsafe {
                     jump_to_other(APP1_ADDR);

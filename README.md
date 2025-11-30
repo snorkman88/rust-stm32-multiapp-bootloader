@@ -5,6 +5,43 @@
 
 A practical example of running multiple applications on a single STM32F411CEU6 (Blackpill) microcontroller with seamless switching between them using a custom bootloader.
 
+## Repository Structure 📁
+
+```
+rust-stm32-multiapp-bootloader/
+├── Cargo.toml                    # Workspace configuration
+├── README.md                     # This file
+├── openocd.cfg                   # OpenOCD configuration for debugging
+├── openocd.gdb                   # GDB script for OpenOCD
+│
+├── bootloader/                   # The bootloader (16KB)
+│   ├── Cargo.toml               # Bootloader dependencies
+│   ├── build.rs                 # Build script
+│   ├── memory.x                 # Flash: 0x08000000, 16KB
+│   ├── device.x                 # Device-specific linker script
+│   └── src/
+│       └── main.rs              # Bootloader logic
+│
+├── app1/                         # Application 1 (128KB)
+│   ├── Cargo.toml               # App1 dependencies
+│   ├── build.rs                 # Build script
+│   ├── memory.x                 # Flash: 0x08004000, 128KB
+│   └── src/
+│       └── main.rs              # Slow blinker with button interrupt
+│
+├── app2/                         # Application 2 (368KB)
+│   ├── Cargo.toml               # App2 dependencies
+│   ├── build.rs                 # Build script
+│   ├── memory.x                 # Flash: 0x08024000, 368KB
+│   └── src/
+│       └── main.rs              # Fast blinker with button polling
+│
+└── target/                       # Build artifacts (gitignored)
+    ├── debug/                   # Debug builds
+    ├── release/                 # Release builds
+    └── thumbv7em-none-eabihf/   # Target-specific builds
+```
+
 **Why Rust?** 🚀
 - **Memory safety** without garbage collection
 - **Zero-cost abstractions** - as fast as C
@@ -426,13 +463,63 @@ probe-rs download target/thumbv7em-none-eabihf/release/app3 \
 
 ## Building and Flashing ⚡
 
+### Important: When Do You Need to Flash the Bootloader? 🤔
+
+**The bootloader only needs to be flashed ONCE** (or whenever you change the number of apps or the flash layout).
+
+Here's why:
+- The **bootloader defines the memory map** - where each app lives in flash
+- Once flashed, it sits at `0x08000000` and orchestrates which app runs
+- **Apps can be updated independently** without touching the bootloader
+- You only reflash the bootloader if you:
+  - Add or remove applications (changing the flash distribution)
+  - Modify the bootloader logic itself
+  - Completely erase the chip
+
+**Typical workflow after initial setup:**
+```bash
+# Initial setup (one time):
+cargo build --release -p bootloader
+probe-rs download target/thumbv7em-none-eabihf/release/bootloader \
+  --chip STM32F411CEUx --base-address 0x08000000
+
+# Regular development (update apps as needed):
+cargo build --release -p app1
+probe-rs download target/thumbv7em-none-eabihf/release/app1 \
+  --chip STM32F411CEUx --base-address 0x08004000
+  
+# The bootloader stays untouched!
+```
+
+### Flash Memory Distribution
+
+The bootloader and apps are distributed across the STM32F411's 512KB flash:
+
+```
+Flash Address      Component        Size       Purpose
+─────────────────────────────────────────────────────────────────
+0x08000000        Bootloader       16KB       App selector, runs on every boot
+0x08004000        App1            128KB       Your first application
+0x08024000        App2            368KB       Your second application
+0x08080000        [End]            ---        Total: 512KB used
+```
+
+**Key Points:**
+- **Bootloader (16KB)**: Small and efficient, just enough to read magic values and jump
+- **App1 (128KB)**: Moderate size, suitable for most applications
+- **App2 (368KB)**: Gets the remaining space, ideal for larger/feature-rich apps
+- You can adjust these sizes in each component's `memory.x` file
+- Just ensure they don't overlap and fit within the 512KB total flash
+
+### Build and Flash Commands
+
 ```bash
 # Build all components
 cargo build --release -p bootloader
 cargo build --release -p app1
 cargo build --release -p app2
 
-# Flash in order (bootloader first!)
+# Flash in order (bootloader first, only needed once!)
 probe-rs download target/thumbv7em-none-eabihf/release/bootloader \
   --chip STM32F411CEUx --base-address 0x08000000
 

@@ -28,6 +28,7 @@ pub unsafe fn jump_to_other(_addr: u32) -> ! {
 
 #[rtic::app(device = stm32f4xx_hal::pac, peripherals = true)]
 mod app {
+    use core::fmt::Write;
     use stm32f4xx_hal::{
         gpio::{self, Input, Output, PushPull},
         pac::{TIM1, USART2},
@@ -36,7 +37,6 @@ mod app {
         serial::{config::Config as SerialConfig, Serial},
         timer,
     };
-    use core::fmt::Write;
 
     use crate::jump_to_other;
 

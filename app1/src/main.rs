@@ -28,6 +28,7 @@ pub unsafe fn jump_to_other(_addr: u32) -> ! {
 #[rtic::app(device = stm32f4xx_hal::pac, peripherals = true)]
 mod app {
 
+    use core::fmt::Write;
     use stm32f4xx_hal::{
         gpio::{self, Edge, Input, Output, PushPull},
         pac::{TIM1, USART2},
@@ -36,7 +37,6 @@ mod app {
         serial::{config::Config as SerialConfig, Serial},
         timer,
     };
-    use core::fmt::Write;
 
     use crate::jump_to_other;
 
@@ -105,12 +105,6 @@ mod app {
         button.trigger_on_edge(&mut dp.EXTI, Edge::Rising);
         // 4) Enable gpio interrupt for button
         button.enable_interrupt(&mut dp.EXTI);
-        // 5) CRITICAL: Explicitly unmask EXTI0 in NVIC after jump
-        unsafe {
-            use cortex_m::peripheral::NVIC;
-            use stm32f4xx_hal::pac::Interrupt;
-            NVIC::unmask(Interrupt::EXTI0);
-        }
 
         writeln!(uart, "APP1: Init complete - button interrupt enabled").ok();
         writeln!(uart, "APP1: Press button to switch to APP2").ok();
@@ -119,7 +113,12 @@ mod app {
             // Initialization of shared resources
             Shared { delayval: 2000_u32 },
             // Initialization of task local resources
-            Local { button, led, delay, uart },
+            Local {
+                button,
+                led,
+                delay,
+                uart,
+            },
         )
     }
 

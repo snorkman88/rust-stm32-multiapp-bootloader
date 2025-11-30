@@ -24,12 +24,6 @@ const APP2_ADDR: u32 = 0x0802_4000; // 16KB + 128KB offset
 /// # Safety
 /// This must point to a valid application with proper vector table
 unsafe fn jump_to_app(addr: u32) -> ! {
-    use core::ptr::read_volatile;
-
-    // Read the initial stack pointer and reset vector from the app's vector table
-    let msp = read_volatile(addr as *const u32);
-    let reset_vector = read_volatile((addr + 4) as *const u32);
-
     // Set VTOR to point to the application's vector table
     const SCB_VTOR: *mut u32 = 0xE000_ED08 as *mut u32;
     core::ptr::write_volatile(SCB_VTOR, addr);

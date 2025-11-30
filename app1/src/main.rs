@@ -11,29 +11,19 @@ use panic_halt as _;
 /// Triggers a system reset after writing magic value to RAM
 pub unsafe fn jump_to_other(_addr: u32) -> ! {
     use core::ptr::write_volatile;
-    
+
     // Magic RAM location and value for App2 (matches bootloader noinit section)
     const MAGIC_ADDR: *mut u32 = 0x2001_FFF8 as *mut u32;
     const MAGIC_APP2: u32 = 0xCAFE_BABE;
-    
+
     // Write magic value to RAM
     write_volatile(MAGIC_ADDR, MAGIC_APP2);
-    
+
     // Memory barrier
     cortex_m::asm::dsb();
-    
-    // Trigger system reset - bootloader will see magic and boot app2
-    const SCB_AIRCR: *mut u32 = 0xE000_ED0C as *mut u32;
-    const AIRCR_VECTKEY: u32 = 0x05FA << 16;
-    const AIRCR_SYSRESETREQ: u32 = 1 << 2;
-    
-    write_volatile(SCB_AIRCR, AIRCR_VECTKEY | AIRCR_SYSRESETREQ);
-    cortex_m::asm::dsb();
-    
-    // Wait for reset
-    loop {
-        cortex_m::asm::nop();
-    }
+
+    // Trigger system reset using cortex-m API
+    cortex_m::peripheral::SCB::sys_reset();
 }
 #[rtic::app(device = stm32f4xx_hal::pac, peripherals = true)]
 mod app {
@@ -104,25 +94,12 @@ mod app {
         button.enable_interrupt(&mut dp.EXTI);
         // 5) CRITICAL: Explicitly unmask EXTI0 in NVIC after jump
         unsafe {
+            use core::ptr::read_volatile;
             use cortex_m::peripheral::NVIC;
             use stm32f4xx_hal::pac::Interrupt;
-            use core::ptr::read_volatile;
-            
-            // Check SYSCFG EXTICR1 (controls EXTI0-3) - should be 0x0 for PA0
-            const SYSCFG_EXTICR1: *const u32 = 0x4001_3808 as *const u32;
-            let exticr1 = read_volatile(SYSCFG_EXTICR1);
-            
-            // Check EXTI registers
-            const EXTI_IMR: *const u32 = 0x4001_3C00 as *const u32;
-            const EXTI_RTSR: *const u32 = 0x4001_3C08 as *const u32;
-            let exti_imr = read_volatile(EXTI_IMR);
-            let exti_rtsr = read_volatile(EXTI_RTSR);
-            
-            defmt::warn!("SYSCFG_EXTICR1={:#010x} (should be 0x0 for GPIOA)", exticr1);
-            defmt::warn!("EXTI_IMR={:#010x} EXTI_RTSR={:#010x}", exti_imr, exti_rtsr);
-            
+
             NVIC::unmask(Interrupt::EXTI0);
-            
+
             const NVIC_ISER0: *const u32 = 0xE000_E100 as *const u32;
             let nvic_iser = read_volatile(NVIC_ISER0);
             defmt::warn!("NVIC_ISER0={:#010x} (bit0 should be 1)", nvic_iser);
@@ -146,13 +123,13 @@ mod app {
         loop {
             // First fast blink
             led.set_high();
-            delay.delay_ms(50u32);
+            delay.delay_ms(150u32);
             led.set_low();
             delay.delay_ms(50u32);
 
             // Second fast blink
             led.set_high();
-            delay.delay_ms(50u32);
+            delay.delay_ms(150u32);
             led.set_low();
             delay.delay_ms(50u32);
 

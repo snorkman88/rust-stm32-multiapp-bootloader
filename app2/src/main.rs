@@ -22,18 +22,8 @@ pub unsafe fn jump_to_other(_addr: u32) -> ! {
     // Memory barrier
     cortex_m::asm::dsb();
 
-    // Trigger system reset - bootloader will see magic and boot app1
-    const SCB_AIRCR: *mut u32 = 0xE000_ED0C as *mut u32;
-    const AIRCR_VECTKEY: u32 = 0x05FA << 16;
-    const AIRCR_SYSRESETREQ: u32 = 1 << 2;
-
-    write_volatile(SCB_AIRCR, AIRCR_VECTKEY | AIRCR_SYSRESETREQ);
-    cortex_m::asm::dsb();
-
-    // Wait for reset
-    loop {
-        cortex_m::asm::nop();
-    }
+    // Trigger system reset using cortex-m API
+    cortex_m::peripheral::SCB::sys_reset();
 }
 
 #[rtic::app(device = stm32f4xx_hal::pac, peripherals = true)]
@@ -77,7 +67,7 @@ mod app {
         let last_button_state = button.is_high();
         defmt::warn!("=== APP2 INIT COMPLETE ===");
         (
-            Shared { delayval: 30_u32 },
+            Shared { delayval: 50_u32 },
             Local {
                 button,
                 led,

@@ -1,11 +1,11 @@
 # 🦀 STM32 Multi-Application Bootloader System
 
-> **100% Written in Rust!** 🎉  
+> **100% Written in Rust!**  
 > No C, no assembly (well, just a tiny bit in the bootloader) - pure, Rust from bootloader to applications!
 
 A practical example of running multiple applications on a single STM32F411CEU6 (Blackpill) microcontroller with seamless switching between them using a custom bootloader.
 
-## Repository Structure 📁
+## Repository Structure
 
 ```
 rust-stm32-multiapp-bootloader/
@@ -42,20 +42,13 @@ rust-stm32-multiapp-bootloader/
     └── thumbv7em-none-eabihf/   # Target-specific builds
 ```
 
-**Why Rust?** 🚀
-- **Memory safety** without garbage collection
-- **Zero-cost abstractions** - as fast as C
-- **Fearless concurrency** with RTIC framework
-- **Excellent embedded ecosystem** with `embedded-hal` and `cortex-m`
-- **Modern tooling** - cargo makes building embedded systems a breeze!
-
-## What Problem Does This Solve? 🤔
+## What Problem Does This Solve?
 
 Imagine you want to run different programs on your microcontroller without having to reflash it every time. Maybe you want a "settings mode" and a "normal operation mode," or different diagnostic tools that you can switch between with a button press.
 
 This project demonstrates exactly that: **two independent applications living in the same chip's flash memory**, with the ability to switch between them at runtime.
 
-### The Two Applications 💡
+### The Two Applications
 
 **App1** (The Slow Blinker):
 - Blinks the LED in a distinctive pattern: *blink-blink-looong pause*
@@ -70,7 +63,7 @@ This project demonstrates exactly that: **two independent applications living in
 
 Both apps can switch to each other, creating a complete bidirectional switching system!
 
-## The Bootloader: The Traffic Controller 🚦
+## The Bootloader: The Traffic Controller
 
 Think of the bootloader as a **tiny program that decides which application to run** when the chip starts up. It sits at the very beginning of flash memory (`0x08000000`) where the chip always starts executing after a reset.
 
@@ -102,7 +95,7 @@ Flash Memory (512KB total):
 └─────────────────────────────────┘ 0x0807FFFF
 ```
 
-## Understanding the `memory.x` Files 📝
+## Understanding the `memory.x` Files
 
 Each component (bootloader, App1, App2) needs its own `memory.x` file to tell the linker where in memory to place the code.
 
@@ -122,7 +115,7 @@ MEMORY
 - `RAM`: Normal RAM for variables and stack (slightly reduced to make room for NOINIT)
 - `NOINIT_RAM`: **The magic ingredient!** This is a special 8-byte section at the end of RAM
 
-#### What is `.noinit` and Why Do We Need It? 🔮
+#### What is `.noinit` and Why Do We Need It?
 
 Normally, when a program starts, the runtime automatically clears (zeros out) all RAM. This is good for normal programs, but **we need to preserve the magic value across resets!**
 
@@ -164,7 +157,7 @@ MEMORY
 - Gets the remaining 368KB of flash memory
 - Also uses full RAM
 
-## How App Switching Works: Step by Step 🔄
+## How App Switching Works: Step by Step
 
 Let's walk through what happens when you press the button in App1:
 
@@ -447,7 +440,7 @@ probe-rs download target/thumbv7em-none-eabihf/release/app3 \
 
 **Rationale:** The value for `--base-address` must match each app's `ORIGIN` in its `memory.x`.
 
-### Quick Checklist for Adding Apps ✅
+### Quick Checklist for Adding Apps
 
 - [ ] Choose a flash address and size that doesn't overlap existing apps
 - [ ] Create app directory with `src/`, `.cargo/`, `Cargo.toml`, `memory.x`
@@ -461,9 +454,9 @@ probe-rs download target/thumbv7em-none-eabihf/release/app3 \
 - [ ] Rebuild bootloader if you changed its code
 - [ ] Test by power cycling and pressing buttons
 
-## Building and Flashing ⚡
+## Building and Flashing
 
-### Important: When Do You Need to Flash the Bootloader? 🤔
+### Important: When Do You Need to Flash the Bootloader?
 
 **The bootloader only needs to be flashed ONCE** (or whenever you change the number of apps or the flash layout).
 
@@ -530,14 +523,14 @@ probe-rs download target/thumbv7em-none-eabihf/release/app2 \
   --chip STM32F411CEUx --base-address 0x08024000
 ```
 
-## Hardware 🔧
+## Hardware
 
 - **Board**: STM32F411CEU6 Blackpill
 - **LED**: PC13 (onboard LED)
 - **Button**: PA0 (with pull-up resistor)
 - **Clock**: 25 MHz HSE (external crystal)
 
-## Key Takeaways 💎
+## Key Takeaways
 
 1. **The bootloader is your app selector** - it always runs first and decides what to run next
 2. **The `.noinit` section is the secret sauce** - it preserves data across software resets (you could see it as a very low level mailbox for message passing between the different apps and the bootloader in which the content of the message tells the bootloader which app should run).
@@ -549,8 +542,8 @@ This architecture is commonly used in production embedded systems for features l
 
 ---
 
-## License 📄
+## License
 
 MIT License - Feel free to use this as a learning resource or starting point for your own projects.
 
-**Happy hacking!** 🦀✨
+**Happy hacking!**
